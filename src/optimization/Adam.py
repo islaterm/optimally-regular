@@ -50,4 +50,4 @@ class Adam():
     def step(self):
         """Performs a single optimization step.
         """
-        pass
+        
