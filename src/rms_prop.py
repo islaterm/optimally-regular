@@ -6,11 +6,10 @@ You should have received a copy of the license along with this
 work. If not, see <http://creativecommons.org/licenses/by/4.0/>.
 """
 
-
 from typing import Iterable
 
 
-class RMSProp():
+class RMSProp:
     """Root mean square propagation implementation.
     """
 
@@ -41,7 +40,7 @@ class RMSProp():
         self.__epsilon = epsilon
         self.__parameters = parameters
 
-    def step():
-        # actualiza acá los parámetros a partir de los gradientes
-        # y la corrección según S
-        pass
+    def step(self):
+        """Performs a single optimization step."""
+        for parameter in self.__parameters:
+            pass
