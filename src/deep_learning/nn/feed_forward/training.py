@@ -9,6 +9,7 @@ import sys
 from timeit import default_timer as timer
 
 import torch
+from matplotlib.pyplot import figure
 from torch.utils.data import DataLoader
 
 from deep_learning.functions.loss import ce_loss
@@ -62,3 +63,33 @@ def train_feed_forward_nn(network: FFNN, dataset, optimizer, epochs=1, batch_siz
                 + ' Tiempo/epoch:{0:.3f}s'.format(epochs_time / epoch))
 
     return loss, accs
+
+
+def plot_results(loss, acc):
+    f1 = figure(1)
+    ax1 = f1.add_subplot(111)
+    ax1.set_title("Loss")
+    ax1.set_xlabel('epochs')
+    ax1.set_ylabel('loss')
+    ax1.plot(loss, c='r')
+    f1.show()
+
+    f2 = figure(2)
+    ax2 = f2.add_subplot(111)
+    ax2.set_title("Accuracy")
+    ax2.set_xlabel('epochs')
+    ax2.set_ylabel('acc')
+    ax2.plot(acc, c='b')
+    f2.show()
+
+
+if __name__ == '__main__':
+    N, F, C = 2000, 300, 10
+    dataset = RandomDataset(N, F, C)
+
+    model = FFNN(F, [300, 400], [celu, relu], C, [float(C), None])
+    optimizer = SGD(model.parameters(), lr=1e-3)
+    with torch.no_grad():
+        loss1, acc1 = entrenar_FFNN(model, dataset, optimizer, epochs=100, batch_size=32)
+
+    plot_results(loss1, acc1)
