@@ -4,14 +4,7 @@ import torch
 from torchvision.datasets import MNIST
 from torchvision.transforms import ToTensor
 
-
 from deep_learning.nn.feed_forward.network import FFNN
-
-
-def ce_loss(q, p, stable=True, epsilon=1e-7):
-    if stable:
-        q = q.clamp(epsilon, 1 - epsilon)
-    return -(p * q.log()).sum() / q.size(0)
 
 
 def test_FFNN(red, dataset, device='cuda'):

@@ -5,58 +5,60 @@ Creative Commons Attribution 4.0 International License.
 You should have received a copy of the license along with this
 work. If not, see <http://creativecommons.org/licenses/by/4.0/>.
 """
+import sys
 from timeit import default_timer as timer
 
 import torch
 from torch.utils.data import DataLoader
 
+from deep_learning.functions.loss import ce_loss
 from deep_learning.nn.feed_forward.network import FFNN
 
 
-def train_feed_forward_nn(network: FFNN, dataset, optimizador, epochs=1, batch_size=1,
+def train_feed_forward_nn(network: FFNN, dataset, optimizer, epochs=1, batch_size=1,
                           reports_every=1, device='cuda'):
     network.to(device)
     data = DataLoader(dataset, batch_size, shuffle=True)
     total = len(dataset)
     epochs_time = 0
-    loss, acc = [], []
-    for e in range(1, epochs + 1):
-        inicio_epoch = timer()
+    loss, accs = [], []
+    for epoch in range(1, epochs + 1):
+        epoch_start = timer()
 
-        for x, y in data:
-            x, y = x.view(x.size(0), -1).float().to(device), y.to(device)
+        for nn_in, nn_out in data:
+            nn_in, nn_out = nn_in.view(nn_in.size(0), -1).float().to(device), nn_out.to(device)
 
-            y_pred = network(x)
+            prediction = network(nn_in)
 
-            y_onehot = torch.zeros_like(y_pred)
-            y_onehot[torch.arange(x.size(0)), y] = 1.
+            onehot_pred = torch.zeros_like(prediction)
+            onehot_pred[torch.arange(nn_in.size(0)), nn_out] = 1.
 
-            network.backward(x, y_onehot, y_pred)
+            network.backward(nn_in, onehot_pred, prediction)
 
-            optimizador.step()
+            optimizer.step()
 
-        epochs_time += timer() - inicio_epoch
+        epochs_time += timer() - epoch_start
 
-        if e % reports_every == 0:
-            X = dataset.data.view(len(dataset), -1).float().to(device)
-            Y = dataset.targets.to(device)
+        if epoch % reports_every == 0:
+            nn_in = dataset.data.view(len(dataset), -1).float().to(device)
+            nn_out = dataset.targets.to(device)
 
-            Y_PRED = network.forward(X).to(device)
+            prediction = network.forward(nn_in).to(device)
 
-            Y_onehot = torch.zeros_like(Y_PRED)
-            Y_onehot[torch.arange(X.size(0)), Y] = 1.
+            onehot_pred = torch.zeros_like(prediction)
+            onehot_pred[torch.arange(nn_in.size(0)), nn_out] = 1.
 
-            L_total = ce_loss(Y_PRED, Y_onehot)
-            loss.append(L_total)
-            diff = Y - torch.argmax(Y_PRED, 1)
-            errores = torch.nonzero(diff).size(0)
+            total_loss = ce_loss(prediction, onehot_pred)
+            loss.append(total_loss)
+            diff = nn_out - torch.argmax(prediction, 1)
+            errors = torch.nonzero(diff).size()[0]
 
-            Acc = 100 * (total - errores) / total
-            acc.append(Acc)
+            acc = 100 * (total - errors) / total
+            accs.append(acc)
 
             sys.stdout.write(
-                '\rEpoch:{0:03d}'.format(e) + ' Acc:{0:.2f}%'.format(Acc)
-                + ' Loss:{0:.4f}'.format(L_total)
-                + ' Tiempo/epoch:{0:.3f}s'.format(epochs_time / e))
+                '\rEpoch:{0:03d}'.format(epoch) + ' Acc:{0:.2f}%'.format(acc)
+                + ' Loss:{0:.4f}'.format(total_loss)
+                + ' Tiempo/epoch:{0:.3f}s'.format(epochs_time / epoch))
 
-    return loss, acc
+    return loss, accs

@@ -11,7 +11,7 @@ import torch
 from torch import Tensor
 from torch.nn import Parameter, ParameterList
 
-from deep_learning.activation_functions import derivatives, softmax
+from deep_learning.functions.activation import derivatives, softmax
 
 ActivationFunction = Union[Callable[[torch.Tensor, float], Tensor], Callable[[Tensor], Tensor]]
 
