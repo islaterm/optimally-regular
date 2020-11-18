@@ -1,31 +1,18 @@
 import sys
-import time
+from timeit import default_timer as timer
 
 import torch
 from torch.utils.data import DataLoader
 from torchvision.datasets import MNIST
 from torchvision.transforms import ToTensor
 
-from activation_functions import celu, relu, sig
 from neural_network import FFNN
-from sgd import SGD
 
 
-def CELoss(Q, P, estable=True, epsilon=1e-7):
-    if estable:
-        Q = Q.clamp(epsilon, 1 - epsilon)
-    return -(P * Q.log()).sum() / Q.size(0)
-
-
-def RegLoss(Q, P, params, estable=True, l2_par=None):
-    if l2_par != None:
-        pond = (l2_par / (2 * Q.size(0)))
-        sum = 0
-        for W in params:
-            sum += pond * (torch.sum(torch.mul(W, W)))
-        return CELoss(Q, P, estable) + sum
-    else:
-        return CELoss(Q, P, estable)
+def ce_loss(q, p, stable=True, epsilon=1e-7):
+    if stable:
+        q = q.clamp(epsilon, 1 - epsilon)
+    return -(p * q.log()).sum() / q.size(0)
 
 
 def entrenar_FFNN(red, dataset, optimizador, epochs=1, batch_size=1, reports_every=1,
@@ -36,32 +23,32 @@ def entrenar_FFNN(red, dataset, optimizador, epochs=1, batch_size=1, reports_eve
     tiempo_epochs = 0
     loss, acc = [], []
     for e in range(1, epochs + 1):
-        inicio_epoch = time.clock()
+        inicio_epoch = timer()
 
         for x, y in data:
             x, y = x.view(x.size(0), -1).float().to(device), y.to(device)
 
-            y_pred = red.forward(x, False, device).to(device)
+            y_pred = red(x)
 
             y_onehot = torch.zeros_like(y_pred)
             y_onehot[torch.arange(x.size(0)), y] = 1.
 
-            red.backward(x, y_onehot, y_pred, device)
+            red.backward(x, y_onehot, y_pred)
 
             optimizador.step()
 
-        tiempo_epochs += time.clock() - inicio_epoch
+        tiempo_epochs += timer() - inicio_epoch
 
         if e % reports_every == 0:
             X = dataset.data.view(len(dataset), -1).float().to(device)
             Y = dataset.targets.to(device)
 
-            Y_PRED = red.forward(X, False, device).to(device)
+            Y_PRED = red.forward(X).to(device)
 
             Y_onehot = torch.zeros_like(Y_PRED)
             Y_onehot[torch.arange(X.size(0)), Y] = 1.
 
-            L_total = RegLoss(Y_PRED, Y_onehot, red.Ws, l2_par=red.l2_par)
+            L_total = ce_loss(Y_PRED, Y_onehot)
             loss.append(L_total)
             diff = Y - torch.argmax(Y_PRED, 1)
             errores = torch.nonzero(diff).size(0)
@@ -134,21 +121,21 @@ mnist_optimizer_Reg = SGD(mnist_model_Reg.parameters(), lr=1e-2)
 mnist_optimizer_Reg_2 = SGD(mnist_model_Reg_2.parameters(), lr=1e-2)
 
 with torch.no_grad():
-    lossNR, accNR = entrenar_FFNN(mnist_model_NoReg, mnist_train_set, mnist_optimizer_NoReg,
+    lossNR, accNR = train_network(mnist_model_NoReg, mnist_train_set, mnist_optimizer_NoReg,
                                   epochs=30, batch_size=200)
 
 with torch.no_grad():
     lossNRTest, accNRTest = test_FFNN(mnist_model_NoReg, mnist_test_set)
 
 with torch.no_grad():
-    lossR, accR = entrenar_FFNN(mnist_model_Reg, mnist_train_set, mnist_optimizer_Reg, epochs=30,
+    lossR, accR = train_network(mnist_model_Reg, mnist_train_set, mnist_optimizer_Reg, epochs=30,
                                 batch_size=200)
 
 with torch.no_grad():
     lossRTest, accRTest = test_FFNN(mnist_model_Reg, mnist_test_set)
 
 with torch.no_grad():
-    lossR2, accR2 = entrenar_FFNN(mnist_model_Reg_2, mnist_train_set, mnist_optimizer_Reg_2,
+    lossR2, accR2 = train_network(mnist_model_Reg_2, mnist_train_set, mnist_optimizer_Reg_2,
                                   epochs=30, batch_size=200)
 
 with torch.no_grad():

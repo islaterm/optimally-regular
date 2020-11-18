@@ -122,3 +122,7 @@ class FFNN(torch.nn.Module):
         for p in self.parameters():
             total += p.numel()
         return total
+
+    @property
+    def weights(self) -> ParameterList:
+        return self.__weights
