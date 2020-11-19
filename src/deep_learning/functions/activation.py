@@ -5,11 +5,17 @@ Creative Commons Attribution 4.0 International License.
 You should have received a copy of the license along with this
 work. If not, see <http://creativecommons.org/licenses/by/4.0/>.
 """
+from typing import Callable, Union
+
 import torch
 from torch import Tensor
 
-
 # region : Activation functions
+
+ActivationFunction = Union[Callable[[torch.Tensor, float], Tensor],
+                           Callable[[Tensor], Tensor]]
+
+
 def sig(t: Tensor) -> Tensor:
     return torch.reciprocal(1 + torch.exp(-1 * t))
 
@@ -50,8 +56,10 @@ def celu(t: Tensor, alpha: float) -> Tensor:
     tensor = t if torch.is_tensor(t) else torch.tensor(t)
     zero_tensor = torch.zeros_like(tensor)
     alpha_tensor = torch.full_like(tensor, alpha)
-    return torch.max(zero_tensor, tensor) + torch.min(zero_tensor, alpha_tensor * (
-            torch.exp(tensor / alpha_tensor) - torch.full_like(tensor, 1)))
+    return torch.max(zero_tensor, tensor) + torch.min(
+        zero_tensor,
+        alpha_tensor *
+        (torch.exp(tensor / alpha_tensor) - torch.full_like(tensor, 1)))
 
 
 def softmax(t: Tensor, dim: int, stable=True) -> Tensor:
@@ -79,7 +87,8 @@ def d_dx_tanh(x: Tensor) -> Tensor:
 
 def d_dx_relu(x: Tensor) -> Tensor:
     """d/dx ReLU(x)"""
-    return torch.where(torch.tensor(x >= 0), torch.ones_like(x), torch.zeros_like(x))
+    return torch.where(torch.tensor(x >= 0), torch.ones_like(x),
+                       torch.zeros_like(x))
 
 
 def d_dx_swish(x: Tensor, beta: float) -> Tensor:
@@ -95,17 +104,25 @@ def d_db_swish(x: Tensor, beta: float) -> Tensor:
 
 def d_dx_celu(x: Tensor, alpha: float) -> Tensor:
     """d/dx CELU(x, alpha)"""
-    return torch.where(torch.tensor(x >= 0), torch.ones_like(x), torch.exp(torch.div(x, alpha)))
+    return torch.where(torch.tensor(x >= 0), torch.ones_like(x),
+                       torch.exp(torch.div(x, alpha)))
 
 
 def d_da_celu(x: Tensor, alpha: float) -> Tensor:
     """d/d(alpha) CELU(x, alpha)"""
-    return torch.where(torch.tensor(x >= 0), torch.zeros_like(x), torch.mul(-1, torch.div(
-        torch.mul(x, torch.exp(torch.div(x, alpha))), alpha)) + torch.exp(
-        torch.div(x, alpha)) - torch.ones_like(x))
+    return torch.where(
+        torch.tensor(x >= 0), torch.zeros_like(x),
+        torch.mul(
+            -1, torch.div(torch.mul(x, torch.exp(torch.div(x, alpha))), alpha))
+        + torch.exp(torch.div(x, alpha)) - torch.ones_like(x))
 
 
 # endregion
 
-derivatives = { sig: d_dx_sigmoid, tanh: d_dx_tanh, relu: d_dx_relu, swish: d_dx_swish,
-                celu: d_dx_celu }
+derivatives = {
+    sig: d_dx_sigmoid,
+    tanh: d_dx_tanh,
+    relu: d_dx_relu,
+    swish: d_dx_swish,
+    celu: d_dx_celu
+}
