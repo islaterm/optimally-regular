@@ -12,8 +12,11 @@ import torch
 from matplotlib.pyplot import figure
 from torch.utils.data import DataLoader
 
+from deep_learning.dataset import RandomDataset
+from deep_learning.functions.activation import celu, relu
 from deep_learning.functions.loss import ce_loss
 from deep_learning.nn.feed_forward.network import FFNN
+from deep_learning.sgd import SGD
 
 
 def train_feed_forward_nn(network: FFNN, dataset, optimizer, epochs=1, batch_size=1,
@@ -90,6 +93,6 @@ if __name__ == '__main__':
     model = FFNN(F, [300, 400], [celu, relu], C, [float(C), None])
     optimizer = SGD(model.parameters(), lr=1e-3)
     with torch.no_grad():
-        loss1, acc1 = entrenar_FFNN(model, dataset, optimizer, epochs=100, batch_size=32)
+        loss1, acc1 = train_feed_forward_nn(model, dataset, optimizer, epochs=100, batch_size=32)
 
     plot_results(loss1, acc1)
