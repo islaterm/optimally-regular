@@ -1,5 +1,6 @@
 # Changelog
 
+- ``0.2.1.2``   Xavier/He initializations 
 - ``0.2.1.1``   Preliminary implementations of Xavier/Xe initialization functions
 - ``0.2.1.0``   Created Xavier/Xe branch
 - ``0.1.3.4``   Adapted training
