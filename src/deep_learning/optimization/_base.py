@@ -34,7 +34,7 @@ class AbstractOptimizer(ABC):
     _learning_rate: float
     _params: List[Tensor]
 
-    def __init__(self, params: List[Tensor], lr: float, defaults):
+    def __init__(self, params: List[Tensor], lr: float, defaults=None):
         """Initializes the common parameters of all optimizers
 
         Arguments:
@@ -43,6 +43,8 @@ class AbstractOptimizer(ABC):
             defaults: (dict): a dict containing default values of optimization
                 options (used when a parameter group doesn't specify them).
         """
+        if defaults is None:
+            defaults = { }
         self._params = params
         self._learning_rate = lr
         self._step = [0] * len(params)
@@ -210,7 +212,7 @@ class AbstractOptimizer(ABC):
                         p.grad.zero_()
 
     @abstractmethod
-    def step(self, closure):
+    def step(self):
         r"""Performs a single optimization step (parameter update).
 
         Arguments:
