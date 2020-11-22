@@ -1,5 +1,8 @@
 # Changelog
 
+- ``0.2.4.2`` Adam constructor
+- ``0.2.4.1`` Adam class declaration
+- ``0.2.4.0`` Instructions
 - ``0.2.2.0`` Instructions
 - ``0.2.1.2``   Xavier/He initializations 
 - ``0.2.1.1``   Preliminary implementations of Xavier/Xe initialization functions
