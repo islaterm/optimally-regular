@@ -1,3 +1,4 @@
+
 """
 "optimally-regular" (c) by Ignacio Slater M.
 "optimally-regular" is licensed under a
@@ -72,7 +73,6 @@ class SGD(AbstractOptimizer):
                     d_p = self.__momentum_buffer
 
                 torch.add(param, d_p, alpha=-self._learning_rate)
-
 
 class RMSProp(AbstractOptimizer):
     """Root mean square propagation implementation.

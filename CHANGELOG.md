@@ -1,5 +1,8 @@
 # Changelog
 
+- ``0.2.4.2`` Adam constructor
+- ``0.2.4.1`` Adam class declaration
+- ``0.2.4.0`` Instructions
 - ``0.2.3.3`` RMSProp working first step
 - ``0.2.3.2`` RMSProp step function
 - ``0.2.3.1`` RMSprops class declaration
