@@ -4,7 +4,7 @@ from typing import List, Tuple
 import torch
 from torch import Tensor
 
-from optimization._base import AbstractOptimizer
+from deep_learning.optimization._base import AbstractOptimizer
 
 
 class Adam(AbstractOptimizer):

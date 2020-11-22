@@ -7,7 +7,7 @@ work. If not, see <http://creativecommons.org/licenses/by/4.0/>.
 """
 
 import warnings
-from abc import ABC
+from abc import ABC, abstractmethod
 from collections import defaultdict
 from copy import deepcopy
 from itertools import chain
@@ -209,6 +209,7 @@ class AbstractOptimizer(ABC):
                             p.grad.requires_grad_(False)
                         p.grad.zero_()
 
+    @abstractmethod
     def step(self, closure):
         r"""Performs a single optimization step (parameter update).
 
