@@ -1,5 +1,6 @@
 # Changelog
 
+- ``0.2.5.2`` SGD with momentum
 - ``0.2.5.1`` SGD with weight decay regularization
 - ``0.2.4.3`` Adam step function
 - ``0.2.4.2`` Adam constructor

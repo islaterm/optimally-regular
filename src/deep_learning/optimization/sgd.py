@@ -18,6 +18,9 @@ class SGD(AbstractOptimizer):
     Implementation of a stochastic gradient descent algorithm (optionally with momentum and weight
     decay).
     """
+    __momentum: float
+    __weight_decay: float
+    __velocities: List[Tensor]
 
     def __init__(self, params: List[Tensor], lr: float, momentum: float = 0,
                  beta: float = 0):
@@ -37,30 +40,20 @@ class SGD(AbstractOptimizer):
         super(SGD, self).__init__(params, lr)
         self.__weight_decay = beta
         self.__momentum = momentum
+        self.__velocities = [torch.zeros_like(p) for p in self._params]
 
     @torch.no_grad()
     def step(self):
-        for parameter in self._params:
+        i = 0
+        for parameter, velocity in zip(self._params, self.__velocities):
             if parameter.grad is not None:
                 grad = parameter.grad
+                self._step[i] += 1
+
                 if self.__weight_decay != 0:
                     torch.add(torch.mul(1 - self.__weight_decay, parameter),  # (1 - b) * p
                               grad, alpha=-self._learning_rate,  # grad * -lr
                               out=parameter)
                 if self.__momentum != 0:
-                    pass
-                # if self.__weight_decay != 0:
-                #     d_p.add_(weight_decay, parameter.data)
-                # if self.__momentum != 0:
-                #     param_state = self.state[parameter]
-                #     if 'momentum_buffer' not in param_state:
-                #         buf = param_state['momentum_buffer'] = d_p.clone()
-                #     else:
-                #         buf = param_state['momentum_buffer']
-                #         buf.mul_(momentum).add_(1 - dampening, d_p)
-                #     if nesterov:
-                #         d_p = d_p.add(momentum, buf)
-                #     else:
-                #         d_p = buf
-                #
-                # parameter.data.add_(-group['lr'], d_p)
+                    velocity.data = velocity.data * self.__momentum - self._learning_rate * grad
+                    torch.add(parameter, velocity, out=parameter)
