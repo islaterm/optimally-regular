@@ -7,69 +7,60 @@ work. If not, see <http://creativecommons.org/licenses/by/4.0/>.
 """
 from typing import List
 
+import torch
 from torch import Tensor
 
 from deep_learning.optimization._base import AbstractOptimizer
 
 
 class SGD(AbstractOptimizer):
-    """Implements stochastic gradient descent (optionally with momentum and weight decay)."""
+    """
+    Implementation of a stochastic gradient descent algorithm (optionally with momentum and weight
+    decay).
+    """
 
-    def __init__(self, params: List[Tensor], lr: float, momentum: float = 0, dampening=0,
-                 weight_decay: float = 0, nesterov=False):
+    def __init__(self, params: List[Tensor], lr: float, momentum: float = 0,
+                 beta: float = 0):
         """
+        Initializes a new SGD optimizer.
+
         Args:
-            params (iterable): iterable of parameters to optimize or dicts defining
-                parameter groups
-            lr (float): learning rate
-            momentum (float, optional): momentum factor (default: 0)
-            weight_decay (float, optional): weight decay (L2 penalty) (default: 0)
-            dampening (float, optional): dampening for momentum (default: 0)
-            nesterov (bool, optional): enables Nesterov momentum (default: False)
+            params:
+                a list of parameters (tensors) to be optimized
+            lr:
+                the learning rate of the algorithm
+            momentum (optional):
+                the momentum used in the optimization; defaults to 0
+            beta:
+                the weight decay regularization factor; defaults to 0
         """
-        defaults = dict(lr=lr, momentum=momentum, dampening=dampening,
-                        weight_decay=weight_decay, nesterov=nesterov)
-        super(SGD, self).__init__(params, lr, defaults)
+        super(SGD, self).__init__(params, lr)
+        self.__weight_decay = beta
+        self.__momentum = momentum
 
-    def __setstate__(self, state):
-        super(SGD, self).__setstate__(state)
-        for group in self.param_groups:
-            group.setdefault('nesterov', False)
-
-    def step(self, closure=None):
-        """Performs a single optimization step.
-        Arguments:
-            closure (callable, optional): A closure that reevaluates the model
-                and returns the loss.
-        """
-        loss = None
-        if closure is not None:
-            loss = closure()
-
-        for group in self.param_groups:
-            weight_decay = group['weight_decay']
-            momentum = group['momentum']
-            dampening = group['dampening']
-            nesterov = group['nesterov']
-
-            for p in group['params']:
-                if p.grad is None:
-                    continue
-                d_p = p.grad.data
-                if weight_decay != 0:
-                    d_p.add_(weight_decay, p.data)
-                if momentum != 0:
-                    param_state = self.state[p]
-                    if 'momentum_buffer' not in param_state:
-                        buf = param_state['momentum_buffer'] = d_p.clone()
-                    else:
-                        buf = param_state['momentum_buffer']
-                        buf.mul_(momentum).add_(1 - dampening, d_p)
-                    if nesterov:
-                        d_p = d_p.add(momentum, buf)
-                    else:
-                        d_p = buf
-
-                p.data.add_(-group['lr'], d_p)
-
-        return loss
+    @torch.no_grad()
+    def step(self):
+        for parameter in self._params:
+            if parameter.grad is not None:
+                grad = parameter.grad
+                if self.__weight_decay != 0:
+                    torch.add(torch.mul(1 - self.__weight_decay, parameter),  # (1 - b) * p
+                              grad, alpha=-self._learning_rate,  # grad * -lr
+                              out=parameter)
+                if self.__momentum != 0:
+                    pass
+                # if self.__weight_decay != 0:
+                #     d_p.add_(weight_decay, parameter.data)
+                # if self.__momentum != 0:
+                #     param_state = self.state[parameter]
+                #     if 'momentum_buffer' not in param_state:
+                #         buf = param_state['momentum_buffer'] = d_p.clone()
+                #     else:
+                #         buf = param_state['momentum_buffer']
+                #         buf.mul_(momentum).add_(1 - dampening, d_p)
+                #     if nesterov:
+                #         d_p = d_p.add(momentum, buf)
+                #     else:
+                #         d_p = buf
+                #
+                # parameter.data.add_(-group['lr'], d_p)
